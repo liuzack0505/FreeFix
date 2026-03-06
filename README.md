@@ -54,17 +54,21 @@ Download the sample data from [here](https://huggingface.co/datasets/hyzhou404/F
 Train a 3D Gaussian Splatting model on the training views using the command:
 
 ```bash
-python -m recon.trainer --data_dir <data_directory> --result_dir <result_directory>
+python -m recon.trainer --data_dir <data_directory> --result_dir <result_directory> --data_type <colmap, hugsim>
 
 # Example
-python -m recon.trainer --data_dir data/mipnerf/bicycle_v2 --result_dir outputs/mipnerf/bicycle_v2 --data_factor 4
+python -m recon.trainer --data_dir data/mipnerf/bicycle_v2 --result_dir outputs/mipnerf/bicycle_v2 --data_factor 4 --data_type colmap
 ```
 <details>
   <summary>optional arguments</summary>
-  --data_factor <int>  # downsample factor for the input images
-  --prune_scale3d <float>  # scale3d threshold for pruning
-  --partition <str>  # partition file for training and validation
-  --strategy <str>  # training strategy, choose from ['mcmc', 'ddim']
+
+```text
+--data_type <str>  # dataset type, choose from ['colmap', 'hugsim'] (default: colmap)
+--data_factor <int>  # downsample factor for the input images
+--prune_scale3d <float>  # scale3d threshold for pruning
+--partition <str>  # partition file for training and validation
+--strategy <str>  # training strategy, choose from ['mcmc', 'default']
+```
 </details>
 
 The training results, including checkpoints and configuration files, will be saved in `<result_directory>`.

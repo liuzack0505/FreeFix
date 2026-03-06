@@ -14,8 +14,6 @@ import torch.nn.functional as F
 import tqdm
 import tyro
 import viser
-# from recon.datasets.colmap import Dataset, Parser
-from recon.datasets.hugsim import Dataset, Parser
 from recon.datasets.traj import generate_interpolated_path
 from torch import Tensor
 from torch.utils.tensorboard import SummaryWriter
@@ -126,6 +124,7 @@ class Config:
     disable_viewer: bool = False
     # Path to the .pt file. If provide, it will skip training and render a video
     ckpt: Optional[str] = None
+    data_type: Literal["colmap", "hugsim"] = "colmap"
 
     # Path to the Mip-NeRF 360 dataset
     data_dir: str = "data/360_v2/garden"
@@ -258,7 +257,7 @@ class Config:
 
 
 def create_splats_with_optimizers(
-    parser: Parser,
+    parser,
     init_type: str = "sfm",
     init_num_pts: int = 100_000,
     init_extent: float = 3.0,
@@ -353,6 +352,13 @@ class Runner:
             cfg.partition = f"{cfg.data_dir}/{cfg.partition}"
         if cfg.partition is None and os.path.exists(f"{cfg.data_dir}/partition.json"):
             cfg.partition = f"{cfg.data_dir}/partition.json"
+
+        if cfg.data_type == "colmap":
+            from recon.datasets.colmap import Dataset, Parser
+        elif cfg.data_type == "hugsim":
+            from recon.datasets.hugsim import Dataset, Parser
+        else:
+            raise ValueError(f"Unknown data_type: {cfg.data_type}")
 
         self.parser = Parser(
             data_dir=cfg.data_dir,
