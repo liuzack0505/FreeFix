@@ -182,7 +182,7 @@ class Refiner:
             self.parser = Parser(
                 base_dir=cfg.data_dir,
                 factor=cfg.data_factor,
-                normalize=True,
+                normalize=False,
             )
         else:
             raise NotImplementedError(f"Unknown data_type: {data_type}")
