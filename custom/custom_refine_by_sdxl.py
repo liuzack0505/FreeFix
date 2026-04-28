@@ -16,6 +16,8 @@ def refine(cfg):
     config: Config = Config(
         data_dir=cfg.base_dir,
         result_dir=cfg.output_dir,
+        data_factor=cfg.data_factor,
+        data_type=cfg.data_type,
     )
     refiner = Refiner(
         config,
@@ -157,6 +159,7 @@ if __name__ == "__main__":
     parser.add_argument('--output_dir', type=str,
                         required=True, help='directory to save results')
     # refiner
+    parser.add_argument('--data_factor', type=int, default=1)
     parser.add_argument('--load_step', type=int, default=29999)
     parser.add_argument('--test_split', type=str, default='test_right')
     parser.add_argument('--data_type', type=str, default='custom')
