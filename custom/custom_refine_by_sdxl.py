@@ -18,6 +18,9 @@ def refine(cfg):
         result_dir=cfg.output_dir,
         data_factor=cfg.data_factor,
         data_type=cfg.data_type,
+        # Conservative growth / strong limits to prevent Gaussian explosion
+        grow_grad2d=0.0008,
+        grow_scale3d=0.01,
     )
     refiner = Refiner(
         config,
