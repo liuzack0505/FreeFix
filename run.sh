@@ -21,7 +21,7 @@ python custom/custom_refine_by_flux.py \
     --data_factor 4
 
 python custom/custom_refine_by_flux.py \
-    --base_dir /data/liuzack0505/drone/Park2 \
-    --output_dir /data/liuzack0505/drone/Park2/output \
+    --base_dir /data/liuzack0505/drone/Yualin \
+    --output_dir /data/liuzack0505/drone/Yualin/output \
     --prompt "A drone view tracking along the railway, bordered by nearby buildings, grassy fields, trees, and roads." \
     --data_factor 4
