@@ -11,7 +11,7 @@ python custom/custom_refine_by_flux.py \
 python custom/custom_refine_by_flux.py \
     --base_dir /data/liuzack0505/drone/Park2 \
     --output_dir /data/liuzack0505/drone/Park2/output \
-    --prompt "An aerial view of a deserted park, complete with outdoor facilities and a playground."
+    --prompt "An aerial view of a deserted park, complete with outdoor facilities and a playground." \
     --data_factor 4
 
 python custom/custom_refine_by_flux.py \
