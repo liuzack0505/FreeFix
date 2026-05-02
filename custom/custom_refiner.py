@@ -16,7 +16,7 @@ from recon import nerfview
 import viser
 import tqdm
 import numpy as np
-from plyfile import PlyData, PlyElement
+from plyfile import PlyData
 
 from recon.trainer import Config, soft_sigmoid
 
@@ -120,48 +120,51 @@ def _write_splat_data_to_ply(
 
     os.makedirs(out_ply_path.parent, exist_ok=True)
 
-    ply_data = []
-    for i in range(num_points):
-        entry = {
-            "x": xyz[i, 0],
-            "y": xyz[i, 1],
-            "z": xyz[i, 2],
-            "opacity": opacities[i, 0],
-            "f_dc_0": features_dc[i, 0, 0],
-            "f_dc_1": features_dc[i, 1, 0],
-            "f_dc_2": features_dc[i, 2, 0],
-        }
+    if not (
+        features_dc.shape[0] == num_points
+        and features_extra.shape[0] == num_points
+        and opacities.shape[0] == num_points
+        and scales.shape[0] == num_points
+        and rots.shape[0] == num_points
+    ):
+        raise ValueError("All splat attributes must have the same first dimension.")
 
-        for j in range(3):
-            for k in range(sh_terms - 1):
-                entry[f"f_rest_{j * (sh_terms - 1) + k}"] = features_extra[i, j, k]
+    num_rest = 3 * (sh_terms - 1)
+    num_scales = scales.shape[1]
+    num_rots = rots.shape[1]
+    num_fields = 7 + num_rest + num_scales + num_rots
 
-        for j in range(scales.shape[1]):
-            entry[f"scale_{j}"] = scales[i, j]
-
-        for j in range(rots.shape[1]):
-            entry[f"rot_{j}"] = rots[i, j]
-
-        ply_data.append(entry)
-
-    dtype_list = [
-        ("x", "f4"),
-        ("y", "f4"),
-        ("z", "f4"),
-        ("opacity", "f4"),
-        ("f_dc_0", "f4"),
-        ("f_dc_1", "f4"),
-        ("f_dc_2", "f4"),
+    header = [
+        "ply",
+        "format binary_little_endian 1.0",
+        f"element vertex {num_points}",
+        "property float x",
+        "property float y",
+        "property float z",
+        "property float opacity",
+        "property float f_dc_0",
+        "property float f_dc_1",
+        "property float f_dc_2",
     ]
-    dtype_list += [(f"f_rest_{i}", "f4") for i in range(3 * (sh_terms - 1))]
-    dtype_list += [(f"scale_{i}", "f4") for i in range(scales.shape[1])]
-    dtype_list += [(f"rot_{i}", "f4") for i in range(rots.shape[1])]
+    header += [f"property float f_rest_{i}" for i in range(num_rest)]
+    header += [f"property float scale_{i}" for i in range(num_scales)]
+    header += [f"property float rot_{i}" for i in range(num_rots)]
+    header.append("end_header")
 
-    field_names = [name for name, _ in dtype_list]
-    rows = [tuple(entry[name] for name in field_names) for entry in ply_data]
-    ply_array = np.array(rows, dtype=dtype_list)
-    ply_element = PlyElement.describe(ply_array, "vertex")
-    PlyData([ply_element], text=False).write(out_ply_path)
+    chunk_size = 65536
+    with open(out_ply_path, "wb") as f:
+        f.write(("\n".join(header) + "\n").encode("ascii"))
+        for start in range(0, num_points, chunk_size):
+            end = min(start + chunk_size, num_points)
+            count = end - start
+            chunk = np.empty((count, num_fields), dtype=np.float32)
+            chunk[:, 0:3] = xyz[start:end]
+            chunk[:, 3] = opacities[start:end, 0]
+            chunk[:, 4:7] = features_dc[start:end, :, 0]
+            chunk[:, 7:7 + num_rest] = features_extra[start:end].reshape(count, num_rest)
+            chunk[:, 7 + num_rest:7 + num_rest + num_scales] = scales[start:end]
+            chunk[:, 7 + num_rest + num_scales:] = rots[start:end]
+            chunk.tofile(f)
 
 
 class Refiner:
