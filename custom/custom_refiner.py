@@ -127,7 +127,8 @@ def _write_splat_data_to_ply(
         and scales.shape[0] == num_points
         and rots.shape[0] == num_points
     ):
-        raise ValueError("All splat attributes must have the same first dimension.")
+        raise ValueError(
+            "All splat attributes must have the same first dimension.")
 
     num_rest = 3 * (sh_terms - 1)
     num_scales = scales.shape[1]
@@ -161,8 +162,10 @@ def _write_splat_data_to_ply(
             chunk[:, 0:3] = xyz[start:end]
             chunk[:, 3] = opacities[start:end, 0]
             chunk[:, 4:7] = features_dc[start:end, :, 0]
-            chunk[:, 7:7 + num_rest] = features_extra[start:end].reshape(count, num_rest)
-            chunk[:, 7 + num_rest:7 + num_rest + num_scales] = scales[start:end]
+            chunk[:, 7:7 +
+                  num_rest] = features_extra[start:end].reshape(count, num_rest)
+            chunk[:, 7 + num_rest:7 + num_rest +
+                  num_scales] = scales[start:end]
             chunk[:, 7 + num_rest + num_scales:] = rots[start:end]
             chunk.tofile(f)
 
@@ -176,9 +179,11 @@ class Refiner:
         c_exp_index=[0.001, 0.01, 0.1],
         hessian_attr=["mean"],
         data_type="custom",
+        rasterize_bg_color: Tuple = (255, 255, 255),
     ):
         self.cfg = cfg
         self.device = "cuda"
+        self.rasterize_bg_color = rasterize_bg_color
 
         if data_type == "custom":
             # cfg.data_dir points to base_dir containing colmap/ and model.ply
@@ -394,6 +399,8 @@ class Refiner:
             colors = torch.cat(
                 [self.splats["sh0"], self.splats["shN"]], 1)  # [N, K, 3]
 
+        rasterize_bg_color = torch.tensor(  # [C, 3]
+            [self.rasterize_bg_color[0], self.rasterize_bg_color[1], self.rasterize_bg_color[2]], dtype=torch.float32, device=self.device).unsqueeze(0).expand(len(camtoworlds), -1) / 255.0
         rasterize_mode = "antialiased" if self.cfg.antialiased else "classic"
         render_colors, render_alphas, info = rasterization(
             means=means,
@@ -410,6 +417,7 @@ class Refiner:
             sparse_grad=self.cfg.sparse_grad,
             rasterize_mode=rasterize_mode,
             **kwargs,
+            backgrounds=rasterize_bg_color,
         )
         if affine is not None:
             render_colors = render_colors @ affine[:3, :3] + affine[:3, 3]

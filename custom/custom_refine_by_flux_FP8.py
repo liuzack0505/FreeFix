@@ -31,6 +31,8 @@ def refine(cfg):
         c_exp_index=cfg.c_exp_index,
         hessian_attr=cfg.hessian_attr,
         data_type=cfg.data_type,
+        rasterize_bg_color=(
+            255, 255, 255) if cfg.rasterize_bg_color == 'white' else (0, 0, 0)
     )
 
     # Using FLUX.1-dev-FP8 for refinement, which is much smaller than the original FLUX.1-dev.
@@ -188,5 +190,7 @@ if __name__ == "__main__":
     parser.add_argument('--gen_loss_weight', type=float, default=0.2)
     parser.add_argument(
         '--affine', action=argparse.BooleanOptionalAction, default=True)
+    parser.add_argument('--rasterize_bg_color', type=str, default='white',
+                        help='background color for rasterization, e.g. "white" or "black"')
     cfg = parser.parse_args()
     refine(cfg)
